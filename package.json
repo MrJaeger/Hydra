@@ -1,0 +1,11 @@
+{
+	"name": "WebRTC-ManyToManyVideoChat",
+	"description": "Many to many video chat over WebRTC, can 'theoretically' support an infinite number of connections",
+	"license": "MIT",
+	"author": "Andrew Jaeger",
+	"version": "0.0.1",
+	"dependencies": {
+		"socket.io": "0.9.16",
+		"node-static": "0.7.1"
+	}
+}
