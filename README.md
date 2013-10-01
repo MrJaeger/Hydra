@@ -25,4 +25,8 @@ node server.js
 ```
 
 4.  Open as many tabs as you want pointing to 'localhost:3000' and see what happens!
+
+#Credit where credit is due
+
+This project is heavily based off of the [HTML5Rocks Demo](http://www.html5rocks.com/en/tutorials/webrtc/basics/), which despite being over a year old is an amazing resource.  If you want to find out more about WebRTC I would definitely suggest checking that out or the official WebRTC standard [here](http://www.w3.org/TR/2013/WD-webrtc-20130910/)
 	
