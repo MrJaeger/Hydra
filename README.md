@@ -10,8 +10,9 @@ This projects allows for people to visit to a webpage and have them all connecte
 #How to run
 
 1.  Clone the repo somewhere  
-
-`git clone git@github.com:MrJaeger/WebRTC-ManyToManyVideoChat.git`
+```
+git clone git@github.com:MrJaeger/WebRTC-ManyToManyVideoChat.git
+```
 
 2.  Install the dependencies using npm  
 ```
@@ -19,8 +20,9 @@ npm install -d
 ```
 
 3.  Run the server  
-
-    node server.js
+```
+node server.js
+```
 
 4.  Open as many tabs as you want pointing to 'localhost:3000' and see what happens!
 	
