@@ -16,8 +16,9 @@ git clone git@github.com:MrJaeger/WebRTC-ManyToManyVideoChat.git
 ```
 
 2.
-Install the dependencies using npm
+Enter into the 'example' directory and install the dependencies using npm
 ```
+cd example/
 npm install -d
 ```
 

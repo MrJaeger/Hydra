@@ -7,7 +7,7 @@
       });
       return socket.on('joining', function(packet) {
         io.sockets["in"](packet.room).emit('join', packet);
-        return socket.join(room);
+        return socket.join(packet.room);
       });
     });
   };

@@ -6,4 +6,4 @@ exports.start = (io)->
 
         socket.on 'joining', (packet)=>
             io.sockets.in(packet.room).emit('join', packet)
-            socket.join(room)
+            socket.join(packet.room)
