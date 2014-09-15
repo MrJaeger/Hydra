@@ -5,6 +5,7 @@
 	"author": "Andrew Jaeger",
 	"version": "0.0.1",
 	"dependencies": {
+        "coffee-script": "1.8.0",
 		"socket.io": "0.9.16",
 		"node-static": "0.7.1"
 	}
