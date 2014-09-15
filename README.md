@@ -24,7 +24,8 @@ This projects allows for people to visit to a webpage and have them all connecte
     ```
     node server.js
     ```
-4.  Open as many tabs as you want pointing to 'localhost:3000' and see what happens!
+4.
+    Open as many tabs as you want pointing to 'localhost:3000' and see what happens!
 
 #Credit where credit is due
 
