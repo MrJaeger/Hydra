@@ -14,11 +14,13 @@ This projects allows for people to visit to a webpage and have them all connecte
     ```
     git clone git@github.com:MrJaeger/WebRTC-ManyToManyVideoChat.git
     ```
+    
 2.  
     Install the dependencies using npm  
     ```
     npm install -d
     ```
+
 3.
     Run the server  
     ```
