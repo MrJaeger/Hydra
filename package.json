@@ -1,14 +1,13 @@
 {
-	"name": "WebRTC-ManyToManyVideoChat",
+	"name": "Hydra",
 	"description": "Many to many video chat over WebRTC, can 'theoretically' support an infinite number of connections",
 	"license": "MIT",
 	"author": "Andrew Jaeger",
 	"version": "0.0.1",
 	"dependencies": {
+        "coffee-script": "1.8.0",
         "grunt": "~0.4.2",
         "grunt-contrib-coffee": "~0.7.0",
-        "coffee-script": "1.8.0",
-		"socket.io": "0.9.16",
-		"node-static": "0.7.1"
+        "grunt-contrib-watch": "~0.5.3"
 	}
 }

@@ -9,9 +9,9 @@ module.exports = (grunt) ->
             compile:
                 files: [{
                     expand: true
-                    cwd: 'coffee/'
-                    src: ['src/*.coffee']
-                    dest: '/dist/'
+                    cwd: 'src/'
+                    src: ['*.coffee']
+                    dest: 'dist/'
                     ext: '.js'
                 }]
 
@@ -19,11 +19,11 @@ module.exports = (grunt) ->
             options:
                 livereload: true
 
-        coffee:
-            files: 'src/**/*.coffee'
-            tasks: ['less']
+            coffee:
+                files: 'src/*.coffee'
+                tasks: ['coffee']
 
     grunt.loadNpmTasks('grunt-contrib-coffee')
     grunt.loadNpmTasks('grunt-contrib-watch')
 
-    grunt.registerTask('default', ['coffee'])
+    grunt.registerTask('default', ['watch', 'coffee'])
