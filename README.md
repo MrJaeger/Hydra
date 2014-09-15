@@ -9,20 +9,20 @@ This projects allows for people to visit to a webpage and have them all connecte
 
 #How to run
 
-1.  
-Clone the repo somewhere  
+1.
+Clone the repo somewhere
 ```
 git clone git@github.com:MrJaeger/WebRTC-ManyToManyVideoChat.git
 ```
 
-2.  
+2.
 Install the dependencies using npm
 ```
 npm install -d
 ```
 
 3.
-Run the server  
+Run the server
 ```
 node server.js
 ```
