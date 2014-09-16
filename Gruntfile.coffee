@@ -17,7 +17,7 @@ module.exports = (grunt) ->
 
         watch:
             options:
-                livereload: true
+                livereload: 13337
 
             coffee:
                 files: 'src/*.coffee'
