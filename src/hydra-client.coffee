@@ -30,7 +30,7 @@ class HydraClient
         @remoteStreamDisconnectedCallback = @options.remoteStreamDisconnectedCallback or ->
 
         # Generate an identifier for this client
-        @indentifier = Math.random().toString 36
+        @identifier = Math.random().toString 36
 
         # The other clients that you are connected to
         @peerConnections = {}
@@ -49,18 +49,100 @@ class HydraClient
         notice =
             room: @room
             identifier: @identifier
-        socket.emit(eventName, notice)
+        @socket.emit(eventName, notice)
 
     sendMessage: (body, remoteIdentifier) =>
         message =
-            room: @room
             target: remoteIdentifier
             remoteIdentifier: @identifier
-        socket.emit('message', message)
+            body: body
+        @_consoleLog "Client sending message", message
+        @socket.emit('message', message)
 
     _consoleLog: =>
         if @debug
-            console.log arguments
+            console.log.apply console, arguments
+
+    _socketSetup: =>
+        @sendNotice 'joining'
+
+        @socket.on 'join', (notice) =>
+            @_consoleLog "Peer #{notice.identifier} made a request to join room #{notice.room}"
+            @_maybeStart notice.identifier
+
+        @socket.on 'message', (message) =>
+            remoteIdentifier = message.remoteIdentifier
+            body = message.body
+            target = message.target
+
+            # Since we are spraying all our messages to every other client
+            # we need to make sure this message was intended for this client
+            if @identifier == target
+                switch body.type
+                    when 'newpeer'
+                        # We havent already connected to with this client
+                        unless @peerConnections[remoteIdentifier]
+                            @_createPeerConnection remoteIdentifier
+                            @peerConnections[remoteIdentifier].addStream @localStream
+                            @notInitiatorFor[remoteIdentifier] = true
+                        break
+                    when 'offer'
+                        debugger
+                        @peerConnections[remoteIdentifier].setRemoteDescription (new RTCSessionDescription(body))
+                        @_doAnswer remoteIdentifier
+                        break
+                    when 'answer'
+                        @peerConnections[remoteIdentifier].setRemoteDescription (new RTCSessionDescription(body))
+                        break
+                    when 'candidate'
+                        candidate = new RTCIceCandidate
+                            sdpMLineIndex: body.label
+                            candidate: body.candidate
+                        @peerConnections[remoteIdentifier].addIceCandidate candidate
+                        break
+
+    _maybeStart: (remoteIdentifier) =>
+        unless @peerConnections[remoteIdentifier]
+            @_createPeerConnection remoteIdentifier
+            @peerConnections[remoteIdentifier].addStream @localStream
+            @sendMessage {type: 'newpeer'}, remoteIdentifier
+
+            unless @notInitiatorFor[remoteIdentifier]
+                @_doCall remoteIdentifier
+
+    _createPeerConnection: (remoteIdentifier) =>        
+        handleIceCandidate = (event) =>
+            if event.candidate
+                candidateMessage =
+                    type: 'candidate'
+                    label: event.candidate.sdpMLineIndex
+                    id: event.candidate.sdpMid
+                    candidate: event.candidate.candidate
+                @sendMessage candidateMessage, remoteIdentifier
+            else
+                @_consoleLog 'End of candidates.'
+
+        handleRemoteStreamAdded = (event, remoteIdentifier) =>
+            @remoteStreamAddedCallback event, remoteIdentifier
+
+        handleIceConnectionStateChange = (event) =>
+            switch event.currentTarget.iceConnectionState
+                when 'disconnected'
+                    @remoteSteamDisconnectedCallback event
+                    break
+
+        # TODO: Figure out what this is supposed to do
+        # and give a good interface around what the user
+        # can do with it
+        handleRemoteStreamRemoved = (event) =>
+            @_consoleLog "Remote stream removed", event
+
+        peerConnection = new webkitRTCPeerConnection null
+        peerConnection.onicecandidate = handleIceCandidate
+        peerConnection.onaddstream = handleRemoteStreamAdded
+        peerConnection.onremovestream = handleRemoteStreamRemoved
+        peerConnection.oniceconnectionstatechange = handleIceConnectionStateChange
+        @peerConnections[remoteIdentifier] = peerConnection
 
     # This is straight boilerplate, could probbaly look a bit prettier
     _requestTurn: =>
@@ -75,7 +157,7 @@ class HydraClient
             # No TURN server. Get one from computeengineondemand.appspot.com:
             xhr = new XMLHttpRequest()
 
-            xhr.onreadystatechange = ->
+            xhr.onreadystatechange = =>
                 if xhr.readyState == 4 and xhr.status == 200
                     turnServer = JSON.parse xhr.responseText
                     @_consoleLog 'Got TURN server: ', turnServer
@@ -93,8 +175,14 @@ class HydraClient
         setLocalAndSendMessage = (sessionDescription) =>
             sessionDescription.sdp = @_preferOpus sessionDescription.sdp
             @peerConnections[remoteIdentifier].setLocalDescription sessionDescription
-            @_consoleLog 'setLocalAndSendMessage sending message' , sessionDescription
+            @_consoleLog 'setLocalAndSendMessage from doAnswer and sending message' , sessionDescription
             @sendMessage sessionDescription, remoteIdentifier
+
+        # Set up audio and video regardless of what devices are present.
+        sdpConstraints =
+            mandatory:
+                OfferToReceiveAudio : true
+                OfferToReceiveVideo : true
 
         @peerConnections[remoteIdentifier].createAnswer setLocalAndSendMessage, null, sdpConstraints
 
@@ -104,50 +192,51 @@ class HydraClient
         setLocalAndSendMessage = (sessionDescription) =>
             sessionDescription.sdp = @_preferOpus sessionDescription.sdp
             @peerConnections[remoteIdentifier].setLocalDescription sessionDescription
-            @_consoleLog 'setLocalAndSendMessage sending message' , sessionDescription
+            @_consoleLog 'setLocalAndSendMessage from doCall and sending message' , sessionDescription
             @sendMessage sessionDescription, remoteIdentifier
 
         handleCreateOfferError = (error) =>
-          @_consoleLog 'createOffer() error: ', error
+            @_consoleLog 'createOffer() error: ', error
 
         @peerConnections[remoteIdentifier].createOffer setLocalAndSendMessage, handleCreateOfferError
 
-    _extractSdp = (sdpLine, pattern) =>
+    _extractSdp: (sdpLine, pattern) =>
         result = sdpLine.match(pattern)
-        firstOrNone = if result.length == 2 then result[1] else null
-        result and firstOrNone
+        firstOrNone = if (result and result.length == 2) then result[1] else null
 
     # Set the selected codec to the first in m line.
-    _setDefaultCodec = (mLine, payload) =>
+    _setDefaultCodec: (mLine, payload) =>
         elements = mLine.split(' ')
         newLine = []
         index = 0
 
-        for idx, element in elements
+        for element, idx in elements
             if idx == 3 # Format of media starts from the fourth.
-                index += 1
                 newLine[index] = payload # Put target payload to the first.
-            if element != payload
                 index += 1
+            if element != payload
                 newLine[index] = element
+                index += 1
         
         newLine.join(' ')
 
     # Strip CN from sdp before CN constraints is ready.
-    _removeCN = (sdpLines, mLineIndex) =>
+    _removeCN: (sdpLines, mLineIndex) =>
         mLineElements = sdpLines[mLineIndex].split(' ')
-        reverseSdplines = sdpLines.slice(0).reverse()
+        newSdpLines = []
+
         # Scan from end for the convenience of removing an item.
-        for idx, line in reverseSdplines
-            payload = @_extractSdp sdpLines[i], /a=rtpmap:(\d+) CN\/\d+/i
+        for line, idx in sdpLines
+            payload = @_extractSdp line, /a=rtpmap:(\d+) CN\/\d+/i
             if payload
                 cnPos = mLineElements.indexOf payload
                 if cnPos != -1
                     # Remove CN payload from m line.
                     mLineElements.splice cnPos, 1
-                reverseSdpLines.splice idx, 1
+            else
+                newSdpLines.push line
 
-        sdpLines = reverseSdplines.slice(0).reverse()
+        sdpLines = newSdpLines
         sdpLines[mLineIndex] = mLineElements.join(' ')
         sdpLines
 
@@ -157,7 +246,7 @@ class HydraClient
         sdpLines = sdp.split('\r\n')
         mLineIndex = null
 
-        for idx, line in sdpLines
+        for line, idx in sdpLines
             if line.search("m=audio") != -1
                 mLineIndex = idx
                 break
@@ -168,7 +257,7 @@ class HydraClient
         # If Opus is available, set it as the default in m line.
         for line in sdpLines
             if line.search('opus/48000') != -1
-                opusPayload = @_extractSdp sdpLines[i], /:(\d+) opus\/48000/i
+                opusPayload = @_extractSdp line, /:(\d+) opus\/48000/i
                 if opusPayload
                     sdpLines[mLineIndex] = @_setDefaultCodec sdpLines[mLineIndex], opusPayload
                 break
@@ -180,75 +269,4 @@ class HydraClient
         sdp
 
 
-    _socketSetup: =>
-        @socket.on 'join', (notice) =>
-            @_consoleLog "Peer #{notice.identifer} made a request to join room #{notice.room}"
-            @_maybeStart notice.identifier
-
-        @socket.on 'message', (message) =>
-            remoteIdentifier = message.remoteIdentifier
-            body = message.body
-            target = message.target
-
-            # Since we are spraying all our messages to every other client
-            # we need to make sure this message was intended for this client
-            if @identifier == target
-                switch body.type
-                    when 'newpeer'
-                        # We havent already connected to with this client
-                        unless @peerConnections[remoteIdentifier]
-                            @_createPeerConnection remoteIdentifier
-                            notInitatorFor[remoteIdentifier] = true
-                    when 'offer'
-                        @peerConnections[remoteIdentifier].setRemoteDescription (new RTCSessionDescription(body))
-                        @_doAnswer remoteIdentifier
-                    when 'answer'
-                        @peerConnections[remoteIdentifier].setRemoteDescription (new RTCSessionDescription(body))
-                    when 'candidate'
-                        candidate = new RTCIceCandidate
-                            sdpMLineIndex: body.label
-                            candidate: body.candidate
-                        @peerConnections[remoteIdentifier].addIceCandidate candidate
-
-    _maybeStart: (remoteIdentifier) =>
-        unless @peerConnections[remoteIdentifier]
-            @_createPeerConnection remoteIdentifier
-            @sendMessage {type: 'newpeer'}, remoteIdentifier
-
-            unless notInitatorFor[remoteIdentifier]
-                @_doCall remoteIdentifier
-
-    _createPeerConnection: (remoteIdentifier) =>
-        handleIceCandidate = (event) ->
-            if event.candidate
-                candidateMessage =
-                    type: 'candidate'
-                    label: event.candidate.sdpMLineIndex
-                    id: event.candidate.sdpMid
-                    candidate: event.candidate.candidate
-                @sendMessage candidateMessage, remoteIdentifier
-            else
-                @_consoleLog 'End of candidates.'
-
-        handleRemoteStreamAdded = (event) ->
-            @remoteStreamAddedCallback event
-
-        handleIceConnectionStateChange = (event) ->
-            switch event.currentTarget.iceConnectionState
-                when 'disconnected'
-                    @remoteSteamDisconnectedCallback event
-
-        # TODO: Figure out what this is supposed to do
-        # and give a good interface around what the user
-        # can do with it
-        handleRemoteStreamRemoved = (event) ->
-            @_consoleLog "Remote stream removed", event
-
-        peerConnection = new webkitRTCPeerConnection null
-        peerConnection.onicecandidate = handleIceCandidate
-        peerConnection.onaddstream = handleRemoteStreamAdded
-        peerConnection.onremovestream = handleRemoteStreamRemoved
-        peerConnection.oniceconnectionstatechange = handleIceConnectionStateChange
-        # PUT AT END
-        @peerConnections[remoteIdentifier].addStream @localStream
-
+@HydraClient = HydraClient

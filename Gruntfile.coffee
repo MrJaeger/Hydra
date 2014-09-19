@@ -6,12 +6,22 @@ module.exports = (grunt) ->
         coffee:
             options:
                 sourceMap: false
+
             compile:
                 files: [{
                     expand: true
                     cwd: 'src/'
                     src: ['*.coffee']
                     dest: 'dist/'
+                    ext: '.js'
+                }]
+
+            compileExample:
+                files: [{
+                    expand: true
+                    cwd: 'src/'
+                    src: ['hydra-client.coffee']
+                    dest: 'example/js/'
                     ext: '.js'
                 }]
 
