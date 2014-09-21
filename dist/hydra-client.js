@@ -62,6 +62,7 @@
     HydraClient.prototype.sendMessage = function(body, remoteIdentifier) {
       var message;
       message = {
+        room: this.room,
         target: remoteIdentifier,
         remoteIdentifier: this.identifier,
         body: body

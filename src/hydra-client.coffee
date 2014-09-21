@@ -53,6 +53,7 @@ class HydraClient
 
     sendMessage: (body, remoteIdentifier) =>
         message =
+            room: @room
             target: remoteIdentifier
             remoteIdentifier: @identifier
             body: body

@@ -21,7 +21,7 @@ module.exports = (grunt) ->
                     expand: true
                     cwd: 'src/'
                     src: ['hydra-client.coffee']
-                    dest: 'example/js/'
+                    dest: 'example/static/js/'
                     ext: '.js'
                 }]
 
