@@ -1,9 +1,16 @@
 {
 	"name": "Hydra",
-	"description": "Many to many video chat over WebRTC, can 'theoretically' support an infinite number of connections",
+	"description": "Client library for many-to-many video chat over WebRTC, can 'theoretically' support an infinite number of connections",
 	"license": "MIT",
 	"author": "Andrew Jaeger",
 	"version": "0.0.1",
+    "engines": {
+        "node": ">=0.10.11"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/MrJaeger/Hydra"
+    },
 	"dependencies": {
         "coffee-script": "1.8.0",
         "grunt": "~0.4.2",
