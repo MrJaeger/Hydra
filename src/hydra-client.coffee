@@ -88,7 +88,6 @@ class HydraClient
                             @notInitiatorFor[remoteIdentifier] = true
                         break
                     when 'offer'
-                        debugger
                         @peerConnections[remoteIdentifier].setRemoteDescription (new RTCSessionDescription(body))
                         @_doAnswer remoteIdentifier
                         break

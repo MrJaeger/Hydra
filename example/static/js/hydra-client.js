@@ -99,7 +99,6 @@
               }
               break;
             case 'offer':
-              debugger;
               _this.peerConnections[remoteIdentifier].setRemoteDescription(new RTCSessionDescription(body));
               _this._doAnswer(remoteIdentifier);
               break;
