@@ -3,7 +3,6 @@
     var _this = this;
     return io.on('connection', function(socket) {
       socket.on('message', function(packet) {
-        console.log(packet.room);
         return io.to(packet.room).emit('message', packet);
       });
       return socket.on('joining', function(packet) {
