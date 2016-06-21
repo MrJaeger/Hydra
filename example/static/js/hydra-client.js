@@ -216,7 +216,7 @@
           OfferToReceiveVideo: true
         }
       };
-      return this.peerConnections[remoteIdentifier].createAnswer(setLocalAndSendMessage, null, sdpConstraints);
+      return this.peerConnections[remoteIdentifier].createAnswer(setLocalAndSendMessage, (function() {}), sdpConstraints);
     };
 
     HydraClient.prototype._doCall = function(remoteIdentifier) {

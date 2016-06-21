@@ -9,7 +9,7 @@ class HydraClient
 
         # Also need out ICE servers, should just work dont need to
         # provide an option for overide
-        @peerConnectionConfig = 
+        @peerConnectionConfig =
             'iceServers': [
                 {'url': 'stun:stun.l.google.com:19302'}
             ]
@@ -110,7 +110,7 @@ class HydraClient
             unless @notInitiatorFor[remoteIdentifier]
                 @_doCall remoteIdentifier
 
-    _createPeerConnection: (remoteIdentifier) =>        
+    _createPeerConnection: (remoteIdentifier) =>
         handleIceCandidate = (event) =>
             if event.candidate
                 candidateMessage =
@@ -184,7 +184,7 @@ class HydraClient
                 OfferToReceiveAudio : true
                 OfferToReceiveVideo : true
 
-        @peerConnections[remoteIdentifier].createAnswer setLocalAndSendMessage, null, sdpConstraints
+        @peerConnections[remoteIdentifier].createAnswer setLocalAndSendMessage, (->), sdpConstraints
 
     _doCall: (remoteIdentifier) =>
         @_consoleLog 'Sending offer to peer', remoteIdentifier
@@ -217,7 +217,7 @@ class HydraClient
             if element != payload
                 newLine[index] = element
                 index += 1
-        
+
         newLine.join(' ')
 
     # Strip CN from sdp before CN constraints is ready.
