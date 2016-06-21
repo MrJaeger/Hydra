@@ -137,7 +137,15 @@ class HydraClient
         handleRemoteStreamRemoved = (event) =>
             @_consoleLog "Remote stream removed", event
 
-        peerConnection = new webkitRTCPeerConnection null
+        # Chrome
+        if window.webkitRTCPeerConnection
+            peerConnection = new webkitRTCPeerConnection null
+        # Firefox
+        else if window.RTCPeerConnection
+            peerConnection = new RTCPeerConnection null
+        else
+            throw "Your browser doesn't seem to have support for RTC :("
+
         peerConnection.onicecandidate = handleIceCandidate
         peerConnection.onaddstream = handleRemoteStreamAdded
         peerConnection.onremovestream = handleRemoteStreamRemoved

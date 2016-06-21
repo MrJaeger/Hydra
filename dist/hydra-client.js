@@ -160,7 +160,13 @@
       handleRemoteStreamRemoved = function(event) {
         return _this._consoleLog("Remote stream removed", event);
       };
-      peerConnection = new webkitRTCPeerConnection(null);
+      if (window.webkitRTCPeerConnection) {
+        peerConnection = new webkitRTCPeerConnection(null);
+      } else if (window.RTCPeerConnection) {
+        peerConnection = new RTCPeerConnection(null);
+      } else {
+        throw "Your browser doesn't seem to have support for RTC :(";
+      }
       peerConnection.onicecandidate = handleIceCandidate;
       peerConnection.onaddstream = handleRemoteStreamAdded;
       peerConnection.onremovestream = handleRemoteStreamRemoved;
